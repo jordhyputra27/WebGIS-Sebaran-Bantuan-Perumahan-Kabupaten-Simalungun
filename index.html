@@ -1,0 +1,963 @@
+<!doctype html>
+<html lang="id" class="webgis-loading">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script>
+        window.__webgisLoadingStartedAt = Date.now();
+        window.__webgisLoadingSafetyTimer = window.setTimeout(function () {
+            var splash = document.getElementById('webgis-loading-screen');
+            if (splash) {
+                splash.classList.add('is-hidden');
+                splash.setAttribute('aria-hidden', 'true');
+                document.documentElement.classList.remove('webgis-loading');
+                window.setTimeout(function () {
+                    if (splash.parentNode) splash.parentNode.removeChild(splash);
+                }, 700);
+            }
+        }, 12000);
+        (function () {
+            var mobileQuery = '(max-width: 600px), (max-height: 520px) and (max-width: 950px)';
+            if (window.matchMedia && window.matchMedia(mobileQuery).matches) {
+                document.documentElement.classList.add('webgis-mobile-preinit');
+            }
+        })();
+        </script>
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/MarkerCluster.css">
+        <link rel="stylesheet" href="css/MarkerCluster.Default.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/L.Control.Locate.min.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+<link rel="stylesheet" href="css/dashboard.css?v=39">
+        <link rel="stylesheet" href="css/loading-screen.css?v=33">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet-search.css">
+        <link rel="stylesheet" href="css/leaflet.photon.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        </style>
+        <title>WEBGIS SEBARAN BANTUAN PERUMAHAN DINAS PERUMAHAN DAN KAWASAN PERMUKIMAN SERTA PERTANAHAN KABUPATEN SIMALUNGUN</title>
+    </head>
+    
+<body>
+<div id="webgis-loading-screen" role="status" aria-live="polite" aria-label="Memuat PETA TEMANKU">
+    <div class="webgis-loading-inner">
+        <div class="webgis-loading-emblem">
+            <img src="images/logo_simalungun.png" alt="Logo Kabupaten Simalungun" class="webgis-loading-logo">
+        </div>
+        <p class="webgis-loading-kicker">Kabupaten Simalungun</p>
+        <h1 class="webgis-loading-title">PETA TEMANKU</h1>
+        <div class="webgis-loading-divider" aria-hidden="true"></div>
+        <p class="webgis-loading-subtitle">
+            Peta Tematik Sebaran Bantuan Perumahan<br>
+            Dinas Perumahan dan Kawasan Permukiman serta Pertanahan
+        </p>
+        <div class="webgis-loading-progress" aria-hidden="true"><span></span></div>
+        <p class="webgis-loading-status">Memuat WebGIS</p>
+    </div>
+</div>
+<div id="dashboard">
+
+<div id="header-dashboard">
+    <img src="images/logo_simalungun.png" alt="Logo Kabupaten Simalungun" class="header-logo-simalungun">
+    <div class="header-title-wrap">
+        <h1>WEBGIS SEBARAN BANTUAN PERUMAHAN</h1>
+        <p>DINAS PERUMAHAN DAN KAWASAN PERMUKIMAN SERTA PERTANAHAN<br>KABUPATEN SIMALUNGUN</p>
+    </div>
+</div>
+
+<button id="toggleTopPanel" class="panel-toggle top-toggle">▲</button>
+<div id="stat-card-container">
+    <div class="stat-card"><span>Desa Penerima</span><b id="desaPenerimaTotal">-</b><small id="desaPersen"></small></div>
+    <div class="stat-card"><span>Kecamatan Penerima</span><b id="kecamatanPenerimaTotal">-</b><small id="kecamatanPersen"></small></div>
+    <div class="stat-card"><span>Total Bantuan</span><b id="totalBantuan">-</b></div>
+    <div class="stat-card"><span>1 Kali Bantuan</span><b id="sekaliBantuan">-</b></div>
+    <div class="stat-card"><span>>1 Kali Bantuan</span><b id="multiBantuan">-</b></div>
+</div>
+
+<button id="toggleFilterPanel" class="filter-toggle-mobile" type="button" aria-label="Buka filter data">☰ Filter Data</button>
+
+<div id="filter-dashboard">
+    <select id="filterTahun">
+        <option value="all">Semua Tahun</option>
+    </select>
+
+    <select id="filterJenis">
+        <option value="all">Semua Jenis Bantuan</option>
+    </select>
+
+    <button onclick="resetDashboard()">Reset Filter</button>
+</div>
+
+<button id="fullscreenBtn" class="fullscreen-map-button" type="button" title="Tampilkan fullscreen" aria-label="Tampilkan fullscreen">⛶</button>
+<button id="helpdeskBtn" class="helpdesk-button" type="button" title="Buka Helpdesk" aria-label="Buka Helpdesk" aria-controls="helpdeskModal" aria-expanded="false">
+  <svg class="helpdesk-button-icon" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M4 13v-1a8 8 0 0 1 16 0v1"></path>
+    <rect x="3" y="12" width="4" height="7" rx="1.4"></rect>
+    <rect x="17" y="12" width="4" height="7" rx="1.4"></rect>
+    <path d="M17 19c0 1.1-.9 2-2 2h-3"></path>
+  </svg>
+</button>
+<div id="helpdeskModal" class="helpdesk-modal" role="dialog" aria-modal="false" aria-labelledby="helpdeskTitle" aria-hidden="true">
+  <div class="helpdesk-content">
+    <button id="closeHelpdesk" class="helpdesk-close" type="button" aria-label="Tutup Helpdesk">&times;</button>
+    <div class="helpdesk-header">
+      <span class="helpdesk-header-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M4 13v-1a8 8 0 0 1 16 0v1"></path>
+          <rect x="3" y="12" width="4" height="7" rx="1.4"></rect>
+          <rect x="17" y="12" width="4" height="7" rx="1.4"></rect>
+          <path d="M17 19c0 1.1-.9 2-2 2h-3"></path>
+        </svg>
+      </span>
+      <div>
+        <h3 id="helpdeskTitle">Helpdesk Informasi</h3>
+        <p>Layanan informasi WebGIS</p>
+      </div>
+    </div>
+
+    <div class="helpdesk-list">
+      <div class="helpdesk-item">
+        <span class="helpdesk-item-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.2"></circle><path d="M5.5 20c.7-4 3-6 6.5-6s5.8 2 6.5 6"></path></svg>
+        </span>
+        <span class="helpdesk-item-text"><small>Petugas layanan</small><strong>Jordhy Putra Iskandar Hasibuan</strong></span>
+      </div>
+
+      <a class="helpdesk-item helpdesk-link" href="https://wa.me/6281264162272" target="_blank" rel="noopener noreferrer">
+        <span class="helpdesk-item-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M20 11.5a8 8 0 0 1-11.8 7L4 20l1.5-4.1A8 8 0 1 1 20 11.5Z"></path><path d="M9 8.5c.7 2.2 2.3 3.8 4.5 4.5"></path><path d="m8.8 8.2.8-.4 1 1.8-.7.7"></path><path d="m13.7 12.1.7-.7 1.8 1-.4.8"></path></svg>
+        </span>
+        <span class="helpdesk-item-text"><small>WhatsApp</small><strong>081264162272</strong></span>
+        <span class="helpdesk-link-arrow" aria-hidden="true">↗</span>
+      </a>
+
+      <a class="helpdesk-item helpdesk-link" href="https://www.instagram.com/medianperumahan/" target="_blank" rel="noopener noreferrer">
+        <span class="helpdesk-item-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"></rect><circle cx="12" cy="12" r="3.5"></circle><circle cx="17.2" cy="6.8" r=".9" class="helpdesk-icon-fill"></circle></svg>
+        </span>
+        <span class="helpdesk-item-text"><small>Instagram</small><strong>MEDIAN Perumahan Simalungun</strong></span>
+        <span class="helpdesk-link-arrow" aria-hidden="true">↗</span>
+      </a>
+
+      <a class="helpdesk-item helpdesk-link" href="https://www.tiktok.com/@medianperumahan?_r=1&amp;_t=ZS-983cneRwDmD" target="_blank" rel="noopener noreferrer">
+        <span class="helpdesk-item-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M14 5v10.2a3.8 3.8 0 1 1-3-3.7"></path><path d="M14 5c.8 2 2.2 3.2 4.5 3.5"></path></svg>
+        </span>
+        <span class="helpdesk-item-text"><small>TikTok</small><strong>MEDIAN Perumahan Simalungun</strong></span>
+        <span class="helpdesk-link-arrow" aria-hidden="true">↗</span>
+      </a>
+
+      <a class="helpdesk-item helpdesk-link" href="https://linktr.ee/medianperumahan?utm_source=ig&amp;utm_medium=social&amp;utm_content=link_in_bio&amp;fbclid=PAZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQPOTM2NjE5NzQzMzkyNDU5AAGnwyzMCIQpTNYN0SyvTVt561svZHJsTukwcy0wYL1MSdAfJLbcuh297-EPLVM_aem_l8bGqXdrAPc0ZhovC06f0g" target="_blank" rel="noopener noreferrer">
+        <span class="helpdesk-item-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 3v18"></path><path d="m6.5 8.5 5.5-5.5 5.5 5.5"></path><path d="m5 13 7-4 7 4"></path><path d="m5 18 7-4 7 4"></path></svg>
+        </span>
+        <span class="helpdesk-item-text"><small>Linktree</small><strong>MEDIAN Perumahan</strong></span>
+        <span class="helpdesk-link-arrow" aria-hidden="true">↗</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div id="map"></div>
+
+<button id="toggleBottomPanel" class="panel-toggle bottom-toggle">▼</button>
+<div id="dashboard-bottom">
+
+<div class="chart-box">
+<h3>Bantuan Per Kecamatan</h3>
+<canvas id="chartKecamatan"></canvas>
+</div>
+
+<div class="chart-box">
+<h3>Jenis Bantuan</h3>
+<canvas id="chartJenis"></canvas>
+</div>
+
+<div class="chart-box">
+<h3>Perkembangan Tahun</h3>
+<canvas id="chartTahun"></canvas>
+</div>
+
+<div class="info-box">
+<h3 id="infoTitle">Informasi Desa</h3>
+<div id="infoDesa">
+Klik desa pada peta untuk melihat informasi.
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/leaflet.markercluster.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/L.Control.Locate.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet.photon.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="js/leaflet-search.js"></script>
+        <script src="data/InformasiWilayah_12.js?v=20260718200837"></script>
+        <script src="data/BatasKecamatan_13.js?v=20260718200837"></script>
+        <script src="data/PenerimaBantuan_14.js?v=20260718200837"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e && e.target ? e.target : null;
+            if (!highlightLayer || !highlightLayer.feature || typeof window.showWebGISHoverFeature !== 'function') return;
+            var geometryType = highlightLayer.feature.geometry && highlightLayer.feature.geometry.type;
+            var kind = (geometryType === 'LineString' || geometryType === 'MultiLineString') ? 'kecamatan' : 'desa';
+            window.showWebGISHoverFeature(highlightLayer.feature, kind, highlightLayer);
+        }
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        }).fitBounds([[2.597795182850769,98.4551009601833],[3.3086515020784493,99.57199840895385]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/qgis2web/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // modify popup if contains media
+        function addClassToPopupIfMedia(content, popup) {
+            var tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            var imgTd = tempDiv.querySelector('td img');
+            if (imgTd) {
+                var src = imgTd.getAttribute('src');
+                if (/\.(jpg|jpeg|png|gif|bmp|webp|avif)$/i.test(src)) {
+                    popup._contentNode.classList.add('media');
+                    setTimeout(function() {
+                        popup.update();
+                    }, 10);
+                } else if (/\.(mp3|wav|ogg|aac)$/i.test(src)) {
+                    var audio = document.createElement('audio');
+                    audio.controls = true;
+                    audio.src = src;
+                    imgTd.parentNode.replaceChild(audio, imgTd);
+                    popup._contentNode.classList.add('media');
+                    setTimeout(function() {
+                        popup.setContent(tempDiv.innerHTML);
+                        popup.update();
+                    }, 10);
+                } else if (/\.(mp4|webm|ogg|mov)$/i.test(src)) {
+                    var video = document.createElement('video');
+                    video.controls = true;
+                    video.src = src;
+                    video.style.width = "400px";
+                    video.style.height = "300px";
+                    video.style.maxHeight = "60vh";
+                    video.style.maxWidth = "60vw";
+                    imgTd.parentNode.replaceChild(video, imgTd);
+                    popup._contentNode.classList.add('media');
+                    // Aggiorna il popup quando il video carica i metadati
+                    video.addEventListener('loadedmetadata', function() {
+                        popup.update();
+                    });
+                    setTimeout(function() {
+                        popup.setContent(tempDiv.innerHTML);
+                        popup.update();
+                    }, 10);
+                } else {
+                    popup._contentNode.classList.remove('media');
+                }
+            } else {
+                popup._contentNode.classList.remove('media');
+            }
+        }
+        var title = new L.Control({'position':'topleft'});
+        title.onAdd = function (map) {
+            this._div = L.DomUtil.create('div', 'info');
+            this.update();
+            return this._div;
+        };
+        title.update = function () {
+            this._div.innerHTML = '';
+        };
+        title.addTo(map);
+        var abstract = new L.Control({'position':'bottomright'});
+        abstract.onAdd = function (map) {
+            this._div = L.DomUtil.create('div',
+            'leaflet-control abstract');
+            this._div.id = 'abstract'
+                this._div.setAttribute("onmouseenter", "abstract.show()");
+                this._div.setAttribute("onmouseleave", "abstract.hide()");
+                this.hide();
+                return this._div;
+            };
+            abstract.hide = function () {
+                this._div.classList.remove("abstractUncollapsed");
+                this._div.classList.add("abstract");
+                this._div.innerHTML = 'i'
+            }
+            abstract.show = function () {
+                this._div.classList.remove("abstract");
+                this._div.classList.add("abstractUncollapsed");
+                this._div.innerHTML = 'Peta Sebaran Bantuan Perumahan Kabupaten Simalungun merupakan WebGIS yang menyajikan informasi spasial mengenai distribusi bantuan perumahan berdasarkan desa/kelurahan di Kabupaten Simalungun. Data yang ditampilkan meliputi bantuan yang bersumber dari APBD Kabupaten, APBD Provinsi, dan BSPS, serta dapat difilter berdasarkan tahun pelaksanaan. WebGIS ini bertujuan mendukung penyajian informasi, monitoring, evaluasi, dan pengambilan keputusan dalam pelaksanaan program bantuan perumahan.';
+        };
+        abstract.addTo(map);
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].className += ' fas fa-ruler';
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_GoogleRoad_0');
+        map.getPane('pane_GoogleRoad_0').style.zIndex = 400;
+        var layer_GoogleRoad_0 = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            pane: 'pane_GoogleRoad_0',
+            opacity: 1.0,
+            attribution: '<a href="https://www.google.at/permissions/geoguidelines/attr-guide.html">Map data ©2015 Google</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_GoogleRoad_0;
+        map.createPane('pane_GoogleSatellite_1');
+        map.getPane('pane_GoogleSatellite_1').style.zIndex = 401;
+        var layer_GoogleSatellite_1 = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            pane: 'pane_GoogleSatellite_1',
+            opacity: 1.0,
+            attribution: '<a href="https://www.google.at/permissions/geoguidelines/attr-guide.html">Map data ©2015 Google</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_GoogleSatellite_1;
+        map.createPane('pane_OSMStandard_2');
+        map.getPane('pane_OSMStandard_2').style.zIndex = 402;
+        var layer_OSMStandard_2 = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OSMStandard_2',
+            opacity: 1.0,
+            attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors, CC-BY-SA</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        });
+        layer_OSMStandard_2;
+        map.createPane('pane_ESRITopo_3');
+        map.getPane('pane_ESRITopo_3').style.zIndex = 403;
+        var layer_ESRITopo_3 = L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+            pane: 'pane_ESRITopo_3',
+            opacity: 1.0,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_ESRITopo_3;
+        map.createPane('pane_ESRISatellite_4');
+        map.getPane('pane_ESRISatellite_4').style.zIndex = 404;
+        var layer_ESRISatellite_4 = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            pane: 'pane_ESRISatellite_4',
+            opacity: 0.9,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_ESRISatellite_4;
+        map.addLayer(layer_ESRISatellite_4);
+
+        function showInfoDesa(p) {
+            var box = document.getElementById('infoDesa');
+            var title = document.getElementById('infoTitle');
+            if (!box) return;
+
+            function getElVal(id, fallback) {
+                var el = document.getElementById(id);
+                return el ? el.value : fallback;
+            }
+            function clean(v) {
+                if (v === null || typeof v === 'undefined' || v === '') return '-';
+                return String(v).trim();
+            }
+            function normJenis(v) {
+                return clean(v)
+                    .replace(/BPSP/ig, 'BSPS')
+                    .replace(/APBD\s*Kabupaten/ig, 'APBD Kab')
+                    .replace(/APBD\s*Provinsi/ig, 'APBD Prov')
+                    .replace(/^APBD Kab$/i, 'APBD Kabupaten')
+                    .replace(/^APBD Prov$/i, 'APBD Provinsi');
+            }
+            function split(v) {
+                return clean(v).split(',').map(function(x){ return x.trim(); }).filter(function(x){ return x && x !== '-'; });
+            }
+            function row(label, value) {
+                return '<div class="info-row"><span>' + label + '</span><strong>' + clean(value) + '</strong></div>';
+            }
+            function getPropByContains(obj, keyword) {
+                keyword = keyword.toLowerCase();
+                for (var k in obj) {
+                    if (Object.prototype.hasOwnProperty.call(obj, k) && k.toLowerCase().indexOf(keyword) !== -1) {
+                        return obj[k];
+                    }
+                }
+                return null;
+            }
+            function getCurrentFilters() {
+                return {
+                    tahun: getElVal('filterTahun', 'all'),
+                    jenis: normJenis(getElVal('filterJenis', 'all'))
+                };
+            }
+            function findRawRow(desa, kec, kode) {
+                try {
+                    if (typeof dataDashboardAsli === 'undefined' || !dataDashboardAsli.rawDesa) return null;
+                    desa = clean(desa).toLowerCase();
+                    kec = clean(kec).toLowerCase();
+                    kode = clean(kode).toLowerCase();
+                    return dataDashboardAsli.rawDesa.find(function(r){
+                        if (kode !== '-' && clean(r.Kode_Wilayah).toLowerCase() === kode) return true;
+                        return clean(r.Desa_Kelurahan).toLowerCase() === desa && clean(r.Kecamatan).toLowerCase() === kec;
+                    }) || null;
+                } catch (e) {
+                    return null;
+                }
+            }
+            function resolveInfo(prop) {
+                var filters = getCurrentFilters();
+                var desa = prop.Desa_Kelurahan || '-';
+                var kec = prop.Kecamatan || '-';
+                var kode = prop.Kode_Wilayah || '-';
+                var raw = findRawRow(desa, kec, kode) || {};
+                kode = raw.Kode_Wilayah || kode;
+
+                var tahun = raw.Tahun_bantuan || prop.Tahun_bantuan || prop.Tahun_Menerima || getPropByContains(prop, 'jenis_bantuan') || '-';
+                var jenis = raw.Jenis_Bantuan || prop.Jenis_Bantuan || prop['Tahun_2026 — Sheet1_Jenis_Bantuan'] || prop['Tahun_2025 — Sheet1_Jenis_Bantuan'] || prop['Tahun_2024 — Sheet1_Jenis_Bantuan'] || prop['Tahun_2023 — Sheet1_Jenis_Bantuan'] || '-';
+                var jumlah = raw.Jumlah_Bantuan;
+                var penerimaAngka = Number(raw.Jumlah_Penerima_Angka);
+                if (!isFinite(penerimaAngka)) penerimaAngka = Number(prop.Jumlah_Penerima_Angka);
+                if (!isFinite(penerimaAngka)) {
+                    var penerimaText = raw.Jumlah_Penerima || prop.Jumlah_Penerima || '0';
+                    var matchPenerima = String(penerimaText).match(/\d+/);
+                    penerimaAngka = matchPenerima ? Number(matchPenerima[0]) : 0;
+                }
+
+                var rawEvents = Array.isArray(raw._events) ? raw._events : [];
+                var matchedEvents = rawEvents.filter(function(event){
+                    if (filters.tahun !== 'all' && String(event.tahun) !== String(filters.tahun)) return false;
+                    if (filters.jenis !== 'all' && normJenis(event.jenis) !== filters.jenis) return false;
+                    return true;
+                });
+
+                var menerima = false;
+                var qgisCount = Number(getPropByContains(prop, 'q2whide') || 0);
+
+                if (rawEvents.length > 0) {
+                    menerima = matchedEvents.length > 0;
+                    jumlah = matchedEvents.length;
+
+                    if (filters.tahun !== 'all') {
+                        tahun = filters.tahun;
+                    } else {
+                        var yearsMatched = Array.from(new Set(matchedEvents.map(function(event){ return String(event.tahun); })));
+                        tahun = yearsMatched.length ? yearsMatched.join(', ') : '-';
+                    }
+
+                    if (filters.jenis !== 'all') {
+                        jenis = filters.jenis;
+                    } else {
+                        var typesMatched = Array.from(new Set(matchedEvents.map(function(event){ return normJenis(event.jenis); })));
+                        jenis = typesMatched.length ? typesMatched.join(', ') : '-';
+                    }
+                } else {
+                    /* Fallback untuk data lama yang belum memiliki pasangan event tahun-jenis. */
+                    if (filters.tahun !== 'all') tahun = filters.tahun;
+                    if (filters.jenis !== 'all') jenis = filters.jenis;
+                    split(tahun).forEach(function(y){ if (/^20\d{2}$/.test(y)) menerima = true; });
+                    if (normJenis(jenis) !== '-' && normJenis(jenis).toLowerCase() !== 'belum pernah' && normJenis(jenis).toLowerCase() !== 'tidak menerima') menerima = true;
+                    if (filters.tahun !== 'all' && raw.Tahun_bantuan) menerima = split(raw.Tahun_bantuan).indexOf(filters.tahun) !== -1;
+                    if (filters.jenis !== 'all' && raw.Jenis_Bantuan) menerima = split(raw.Jenis_Bantuan).map(normJenis).indexOf(filters.jenis) !== -1;
+                    if (filters.tahun !== 'all' || filters.jenis !== 'all') jumlah = menerima ? 1 : 0;
+                    else if (typeof jumlah === 'undefined' || jumlah === null) jumlah = qgisCount;
+                }
+
+                return {
+                    desa: desa,
+                    kec: kec,
+                    kode: kode,
+                    tahun: tahun,
+                    jenis: normJenis(jenis),
+                    jumlah: Number(jumlah || 0),
+                    penerima: penerimaAngka,
+                    status: menerima ? 'Menerima Bantuan' : 'Tidak Menerima'
+                };
+            }
+
+            var filters = getCurrentFilters();
+            var info = resolveInfo(p || {});
+            var html = '';
+            html += row('Desa/Kelurahan', info.desa);
+            html += row('Kode Wilayah', info.kode);
+            html += row('Kecamatan', info.kec);
+            html += row('Status Bantuan', info.status);
+            if (filters.tahun === 'all') html += row('Tahun Bantuan', info.tahun);
+            if (filters.jenis === 'all') html += row('Jenis Bantuan', info.jenis);
+            html += row('Total Bantuan', info.jumlah + ' Kali');
+            html += row('Jumlah Penerima Bantuan', info.penerima + ' Orang');
+
+            box.innerHTML = '<div class="desa-detail">' + html + '</div>';
+            if (title) title.textContent = 'Informasi Desa';
+        }
+
+        /* Revisi 30: layer tahun/jenis lama tetap digantikan satu layer dinamis, dengan simbolisasi Revisi 28. */
+        function pop_InformasiWilayah_12(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (typeof window.clearWebGISHoverFeature === 'function') {
+                        window.clearWebGISHoverFeature(e && e.target ? e.target : null);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Desa_Kelurahan</th>\
+                        <td>' + (feature.properties['Desa_Kelurahan'] !== null ? autolinker.link(String(feature.properties['Desa_Kelurahan']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Kode_Wilayah</th>\
+                        <td>' + (feature.properties['Kode_Wilayah'] !== null ? autolinker.link(String(feature.properties['Kode_Wilayah']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Kecamatan</th>\
+                        <td>' + (feature.properties['Kecamatan'] !== null ? autolinker.link(String(feature.properties['Kecamatan']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Jumlah_Bantuan</th>\
+                        <td>' + (feature.properties['Jumlah_Bantuan'] !== null ? autolinker.link(String(feature.properties['Jumlah_Bantuan']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Jenis_Bantuan</th>\
+                        <td>' + (feature.properties['Jenis_Bantuan'] !== null ? autolinker.link(String(feature.properties['Jenis_Bantuan']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Tahun_bantuan</th>\
+                        <td>' + (feature.properties['Tahun_bantuan'] !== null ? autolinker.link(String(feature.properties['Tahun_bantuan']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Jumlah_Penerima</th>\
+                        <td>' + (feature.properties['Jumlah_Penerima'] !== null ? autolinker.link(String(feature.properties['Jumlah_Penerima']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.on('click', function(e) {
+                showInfoDesa(feature.properties);
+            });
+        }
+
+        function style_InformasiWilayah_12_0(feature) {
+            if (feature.properties['Jumlah_Bantuan'] >= 0.000000 && feature.properties['Jumlah_Bantuan'] <= 0.000000 ) {
+                return {
+                pane: 'pane_InformasiWilayah_12',
+                opacity: 1,
+                color: 'rgba(158,158,158,0.85)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(240,240,240,0.85)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['Jumlah_Bantuan'] >= 0.000000 && feature.properties['Jumlah_Bantuan'] <= 1.000000 ) {
+                return {
+                pane: 'pane_InformasiWilayah_12',
+                opacity: 1,
+                color: 'rgba(158,158,158,0.85)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,213,79,0.85)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['Jumlah_Bantuan'] >= 1.000000 ) {
+                return {
+                pane: 'pane_InformasiWilayah_12',
+                opacity: 1,
+                color: 'rgba(158,158,158,0.85)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(251,140,0,0.85)',
+                interactive: true,
+            }
+            }
+        }
+        map.createPane('pane_InformasiWilayah_12');
+        map.getPane('pane_InformasiWilayah_12').style.zIndex = 412;
+        map.getPane('pane_InformasiWilayah_12').style['mix-blend-mode'] = 'normal';
+        var layer_InformasiWilayah_12 = new L.geoJson(json_InformasiWilayah_12, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_InformasiWilayah_12',
+            layerName: 'layer_InformasiWilayah_12',
+            pane: 'pane_InformasiWilayah_12',
+            onEachFeature: pop_InformasiWilayah_12,
+            style: style_InformasiWilayah_12_0,
+        });
+        bounds_group.addLayer(layer_InformasiWilayah_12);
+        map.addLayer(layer_InformasiWilayah_12);
+        function pop_BatasKecamatan_13(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (typeof window.clearWebGISHoverFeature === 'function') {
+                        window.clearWebGISHoverFeature(e && e.target ? e.target : null);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Kecamatan</th>\
+                        <td>' + (feature.properties['WADMKC'] !== null ? autolinker.link(String(feature.properties['WADMKC']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Total Nagori</th>\
+                        <td>' + (feature.properties['Rekap_Bantuan_Kecamatan — Sheet1_Total_Nagori'] !== null ? autolinker.link(String(feature.properties['Rekap_Bantuan_Kecamatan — Sheet1_Total_Nagori']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Jumlah Nagori Penerima</th>\
+                        <td>' + (feature.properties['Rekap_Bantuan_Kecamatan — Sheet1_Jumlah_Nagori_Penerima'] !== null ? autolinker.link(String(feature.properties['Rekap_Bantuan_Kecamatan — Sheet1_Jumlah_Nagori_Penerima']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Jumlah Bantuan</th>\
+                        <td>' + (feature.properties['Rekap_Bantuan_Kecamatan — Sheet1_Jumlah Bantuan'] !== null ? autolinker.link(String(feature.properties['Rekap_Bantuan_Kecamatan — Sheet1_Jumlah Bantuan']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.on('click', function(e) {
+                showInfoDesa(feature.properties);
+            });
+        }
+
+        function style_BatasKecamatan_13_0() {
+            return {
+                pane: 'pane_BatasKecamatan_13',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: false,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_BatasKecamatan_13');
+        map.getPane('pane_BatasKecamatan_13').style.zIndex = 413;
+        map.getPane('pane_BatasKecamatan_13').style['mix-blend-mode'] = 'normal';
+        var layer_BatasKecamatan_13 = new L.geoJson(json_BatasKecamatan_13, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_BatasKecamatan_13',
+            layerName: 'layer_BatasKecamatan_13',
+            pane: 'pane_BatasKecamatan_13',
+            onEachFeature: pop_BatasKecamatan_13,
+            style: style_BatasKecamatan_13_0,
+        });
+        bounds_group.addLayer(layer_BatasKecamatan_13);
+        map.addLayer(layer_BatasKecamatan_13);
+        const url = {"Nominatim OSM": "https://nominatim.openstreetmap.org/search?format=geojson&addressdetails=1&",
+        "France BAN": "https://api-adresse.data.gouv.fr/search/?"}
+        var photonControl = L.control.photon({
+            url: url["Nominatim OSM"],
+            feedbackLabel: '',
+            position: 'topleft',
+            includePosition: true,
+            initial: true,
+            // resultsHandler: myHandler,
+        }).addTo(map);
+        photonControl._container.childNodes[0].style.borderRadius="10px"
+        // Create a variable to store the geoJSON data
+        var x = null;
+        // Create a variable to store the marker
+        var marker = null;
+        // Add an event listener to the Photon control to create a marker from the returned geoJSON data
+        var z = null;
+        photonControl.on('selected', function(e) {
+            var feature = e && e.choice ? e.choice : null;
+            if (!feature || !feature.geometry) return;
+
+            // Bersihkan hasil pencarian sebelumnya secara aman.
+            try {
+                if (obj3.marker && map.hasLayer(obj3.marker)) map.removeLayer(obj3.marker);
+            } catch (err) {}
+            try {
+                if (x && map.hasLayer(x)) map.removeLayer(x);
+            } catch (err) {}
+            obj3.marker = null;
+            x = null;
+
+            obj2.gcd = feature;
+            var properties = feature.properties || {};
+            var label = properties.label || properties.display_name || properties.name || 'Lokasi hasil pencarian';
+            var latlng = null;
+
+            // Nominatim dapat mengembalikan titik, garis, ataupun poligon.
+            // Semua tipe dibuat terlihat dengan marker; geometri non-titik juga disorot.
+            if (feature.geometry.type === 'Point' && Array.isArray(feature.geometry.coordinates)) {
+                latlng = L.latLng(feature.geometry.coordinates[1], feature.geometry.coordinates[0]);
+            } else {
+                try {
+                    x = L.geoJSON(feature, {
+                        style: {
+                            color: '#1f4e79',
+                            weight: 3,
+                            opacity: 0.95,
+                            fillColor: '#4f91c7',
+                            fillOpacity: 0.18
+                        }
+                    }).addTo(map);
+                    var resultBounds = x.getBounds();
+                    if (resultBounds && resultBounds.isValid()) latlng = resultBounds.getCenter();
+                } catch (err) {
+                    x = null;
+                }
+            }
+
+            if (!latlng && properties.lat !== undefined && properties.lon !== undefined) {
+                latlng = L.latLng(Number(properties.lat), Number(properties.lon));
+            }
+            if (!latlng) return;
+
+            obj3.marker = L.marker(latlng, {title: label})
+                .bindPopup(label)
+                .addTo(map)
+                .openPopup();
+
+            if (x && typeof x.getBounds === 'function') {
+                var bounds = x.getBounds();
+                if (bounds && bounds.isValid()) map.fitBounds(bounds, {padding: [28, 28], maxZoom: 17});
+                else map.setView(latlng, 17);
+            } else {
+                map.setView(latlng, 17);
+            }
+
+            z = label;
+            if (e.target && e.target.input) e.target.input.value = label;
+        });
+        var search = document.getElementsByClassName("leaflet-photon leaflet-control")[0];
+        search.classList.add("leaflet-control-search")
+        search.style.display = "flex";
+        search.style.backgroundColor="rgba(255,255,255,0.5)" 
+
+        // Create the new button element
+        var button = document.createElement("div");
+        button.id = "gcd-button-control";
+        button.className = "gcd-gl-btn fa fa-search search-button";
+
+        // Insert the button at the beginning of the search control
+        search.insertBefore(button, search.firstChild);
+        last = search.lastChild;
+        last.style.display = "none";
+        var overlaysTree = [
+            {label: '<img src="legend/BatasKecamatan_13.png" /> Batas Kecamatan', layer: layer_BatasKecamatan_13},
+            {label: "ESRI Satellite", layer: layer_ESRISatellite_4},
+            {label: "ESRI Topo", layer: layer_ESRITopo_3},
+            {label: "OSM Standard", layer: layer_OSMStandard_2},
+            {label: "Google Satellite", layer: layer_GoogleSatellite_1},
+            {label: "Google Road", layer: layer_GoogleRoad_0},]
+        var lay = L.control.layers.tree(null, overlaysTree,{
+            //namedToggle: true,
+            //selectorBack: false,
+            //closedSymbol: '&#8862; &#x1f5c0;',
+            //openedSymbol: '&#8863; &#x1f5c1;',
+            //collapseAll: 'Collapse all',
+            //expandAll: 'Expand all',
+            collapsed: true,
+        });
+        lay.addTo(map);
+        map.on("zoomend", function(){
+
+                if (map.hasLayer(layer_BatasKecamatan_13)) {
+                    if (map.getZoom() <= 19 && map.getZoom() >= 19) {
+                        layer_BatasKecamatan_13.eachLayer(function (layer) {
+                            layer.openTooltip();
+                        });
+                    } else {
+                        layer_BatasKecamatan_13.eachLayer(function (layer) {
+                            layer.closeTooltip();
+                        });
+                    }
+                }
+        });
+        setBounds();
+        var i = 0;
+        layer_BatasKecamatan_13.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['WADMKC'] !== null?String('<div style="color: #000000; font-size: 10pt; font-style: italic; font-family: \'Cambria\', sans-serif;">' + layer.feature.properties['WADMKC']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_BatasKecamatan_13'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+                if (map.hasLayer(layer_BatasKecamatan_13)) {
+                    if (map.getZoom() <= 19 && map.getZoom() >= 19) {
+                        layer_BatasKecamatan_13.eachLayer(function (layer) {
+                            layer.openTooltip();
+                        });
+                    } else {
+                        layer_BatasKecamatan_13.eachLayer(function (layer) {
+                            layer.closeTooltip();
+                        });
+                    }
+                }
+        var villageSearchControl = new L.Control.Search({
+            layer: layer_InformasiWilayah_12,
+            initial: false,
+            collapsed: true,
+            hideMarkerOnCollapse: true,
+            propertyName: 'Desa_Kelurahan'});
+        map.addControl(villageSearchControl);
+        window.villageSearchControl = villageSearchControl;
+        if (typeof url === 'undefined') {
+            document.getElementsByClassName('search-button')[0].className += ' fa fa-binoculars';
+        } else {
+            document.getElementsByClassName('search-button')[1].className += ' fa fa-binoculars';
+        }
+        resetLabels([layer_BatasKecamatan_13]);
+        map.on("zoomend", function(){
+            resetLabels([layer_BatasKecamatan_13]);
+        });
+        map.on("layeradd", function(){
+            resetLabels([layer_BatasKecamatan_13]);
+        });
+        map.on("layerremove", function(){
+            resetLabels([layer_BatasKecamatan_13]);
+        });
+        setTimeout(function(){map.invalidateSize();},800);
+</script>
+    
+
+<script src="js/data_dashboard_asli.js?v=20260718200837"></script>
+<script src="js/auto_data_runtime.js?v=31"></script>
+<script src="js/chart_data_asli.js"></script>
+<script src="js/interactive_dashboard.js"></script>
+<script src="js/hierarchical_info.js?v=41"></script>
+<script src="js/panel_toggle.js?v=31"></script>
+<script src="js/fullscreen_control.js"></script>
+<script src="js/dashboard_filter.js?v=40"></script>
+<script src="js/kecamatan_hit_and_basemap_contrast.js?v=40"></script>
+<script src="js/dynamic_legend.js?v=35"></script>
+<script src="js/mobile_responsive.js?v=31"></script>
+<script src="js/penerima_koordinat.js?v=40"></script>
+<script src="js/ui_control_enhancements_v2.js?v=20"></script>
+<script>
+(function () {
+    const helpdeskBtn = document.getElementById('helpdeskBtn');
+    const helpdeskModal = document.getElementById('helpdeskModal');
+    const closeHelpdesk = document.getElementById('closeHelpdesk');
+
+    if (!helpdeskBtn || !helpdeskModal || !closeHelpdesk) return;
+
+    function setHelpdesk(open) {
+        helpdeskModal.classList.toggle('is-open', open);
+        helpdeskModal.setAttribute('aria-hidden', String(!open));
+        helpdeskBtn.setAttribute('aria-expanded', String(open));
+        helpdeskBtn.setAttribute('aria-label', open ? 'Tutup Helpdesk' : 'Buka Helpdesk');
+        helpdeskBtn.classList.toggle('is-active', open);
+    }
+
+    helpdeskBtn.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        setHelpdesk(!helpdeskModal.classList.contains('is-open'));
+    });
+
+    closeHelpdesk.addEventListener('click', function (event) {
+        event.preventDefault();
+        setHelpdesk(false);
+        helpdeskBtn.focus();
+    });
+
+    helpdeskModal.addEventListener('click', function (event) {
+        event.stopPropagation();
+    });
+
+    document.addEventListener('pointerdown', function (event) {
+        if (!helpdeskModal.classList.contains('is-open')) return;
+        if (!helpdeskModal.contains(event.target) && !helpdeskBtn.contains(event.target)) {
+            setHelpdesk(false);
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && helpdeskModal.classList.contains('is-open')) {
+            setHelpdesk(false);
+            helpdeskBtn.focus();
+        }
+    });
+})();
+</script>
+<script src="js/loading-screen.js?v=33"></script>
+</body>
+</html>

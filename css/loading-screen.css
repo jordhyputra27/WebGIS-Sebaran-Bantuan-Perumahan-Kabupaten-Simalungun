@@ -1,0 +1,259 @@
+/* Loading Screen WebGIS - Revisi 33 */
+:root {
+    --splash-blue: #1f4e79;
+    --splash-blue-dark: #173d60;
+    --splash-blue-light: #3f78a8;
+    --splash-white: #ffffff;
+}
+
+html.webgis-loading,
+html.webgis-loading body {
+    overflow: hidden !important;
+}
+
+#webgis-loading-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    display: grid;
+    place-items: center;
+    min-height: 100svh;
+    padding: 28px;
+    box-sizing: border-box;
+    overflow: hidden;
+    color: var(--splash-white);
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: var(--splash-blue);
+    background-image:
+        linear-gradient(135deg, rgba(255,255,255,.045) 25%, transparent 25%),
+        linear-gradient(225deg, rgba(255,255,255,.045) 25%, transparent 25%),
+        linear-gradient(45deg, rgba(255,255,255,.045) 25%, transparent 25%),
+        linear-gradient(315deg, rgba(255,255,255,.045) 25%, var(--splash-blue-dark) 25%);
+    background-position: 30px 0, 30px 0, 0 0, 0 0;
+    background-size: 60px 60px;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity .65s ease, visibility .65s ease;
+}
+
+#webgis-loading-screen::before,
+#webgis-loading-screen::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+#webgis-loading-screen::before {
+    width: min(62vw, 720px);
+    aspect-ratio: 1;
+    left: -22vw;
+    top: -35vw;
+    border: 1px solid rgba(255,255,255,.10);
+    box-shadow:
+        0 0 0 55px rgba(255,255,255,.028),
+        0 0 0 110px rgba(255,255,255,.018);
+}
+
+#webgis-loading-screen::after {
+    width: min(52vw, 620px);
+    aspect-ratio: 1;
+    right: -21vw;
+    bottom: -30vw;
+    border: 1px solid rgba(255,255,255,.08);
+    box-shadow:
+        0 0 0 55px rgba(255,255,255,.025),
+        0 0 0 110px rgba(255,255,255,.015);
+}
+
+#webgis-loading-screen.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.webgis-loading-inner {
+    position: relative;
+    z-index: 1;
+    width: min(920px, 100%);
+    text-align: center;
+}
+
+.webgis-loading-emblem {
+    display: grid;
+    place-items: center;
+    width: clamp(118px, 16vw, 156px);
+    height: clamp(118px, 16vw, 156px);
+    margin: 0 auto 24px;
+    padding: 16px;
+    box-sizing: border-box;
+    border: 1px solid rgba(255,255,255,.34);
+    border-radius: 50%;
+    background: rgba(255,255,255,.12);
+    box-shadow:
+        0 22px 55px rgba(8,28,48,.30),
+        inset 0 1px 0 rgba(255,255,255,.35);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+    animation: webgis-logo-float 2.6s ease-in-out infinite;
+}
+
+.webgis-loading-logo {
+    display: block;
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 5px 8px rgba(0,0,0,.24));
+}
+
+.webgis-loading-kicker {
+    margin: 0 0 8px;
+    font-size: clamp(11px, 1.3vw, 14px);
+    font-weight: 700;
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.78);
+}
+
+.webgis-loading-title {
+    margin: 0;
+    font-size: clamp(38px, 7vw, 76px);
+    line-height: .98;
+    font-weight: 900;
+    letter-spacing: .025em;
+    text-shadow: 0 8px 24px rgba(8,28,48,.30);
+}
+
+.webgis-loading-divider {
+    width: 76px;
+    height: 3px;
+    margin: 20px auto 18px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.9);
+    box-shadow: 0 0 18px rgba(255,255,255,.35);
+}
+
+.webgis-loading-subtitle {
+    max-width: 850px;
+    margin: 0 auto;
+    font-size: clamp(12px, 1.7vw, 18px);
+    line-height: 1.55;
+    font-weight: 700;
+    letter-spacing: .035em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.94);
+}
+
+.webgis-loading-progress {
+    width: min(280px, 72vw);
+    height: 4px;
+    margin: 32px auto 12px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(255,255,255,.20);
+}
+
+.webgis-loading-progress span {
+    display: block;
+    width: 42%;
+    height: 100%;
+    border-radius: inherit;
+    background: #fff;
+    box-shadow: 0 0 13px rgba(255,255,255,.75);
+    animation: webgis-progress 1.35s ease-in-out infinite;
+}
+
+.webgis-loading-status {
+    margin: 0;
+    font-size: 12px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.72);
+}
+
+@keyframes webgis-progress {
+    0% { transform: translateX(-125%); }
+    100% { transform: translateX(340%); }
+}
+
+@keyframes webgis-logo-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-7px); }
+}
+
+@media (max-width: 600px) {
+    #webgis-loading-screen {
+        padding: 24px 18px;
+        background-size: 44px 44px;
+        background-position: 22px 0, 22px 0, 0 0, 0 0;
+    }
+
+    .webgis-loading-emblem {
+        margin-bottom: 20px;
+    }
+
+    .webgis-loading-title {
+        font-size: clamp(36px, 12vw, 56px);
+    }
+
+    .webgis-loading-divider {
+        margin-top: 16px;
+        margin-bottom: 15px;
+    }
+
+    .webgis-loading-subtitle {
+        font-size: clamp(11px, 3.25vw, 14px);
+        line-height: 1.5;
+    }
+
+    .webgis-loading-progress {
+        margin-top: 27px;
+    }
+}
+
+@media (max-height: 620px) and (orientation: landscape) {
+    #webgis-loading-screen {
+        padding: 14px 22px;
+    }
+
+    .webgis-loading-emblem {
+        width: 86px;
+        height: 86px;
+        margin-bottom: 12px;
+        padding: 11px;
+    }
+
+    .webgis-loading-kicker {
+        margin-bottom: 4px;
+        font-size: 10px;
+    }
+
+    .webgis-loading-title {
+        font-size: 38px;
+    }
+
+    .webgis-loading-divider {
+        margin: 10px auto;
+    }
+
+    .webgis-loading-subtitle {
+        max-width: 760px;
+        font-size: 11px;
+        line-height: 1.35;
+    }
+
+    .webgis-loading-progress {
+        margin-top: 15px;
+        margin-bottom: 7px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #webgis-loading-screen,
+    .webgis-loading-emblem,
+    .webgis-loading-progress span {
+        animation: none !important;
+        transition-duration: .15s !important;
+    }
+}
